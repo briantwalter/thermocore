@@ -18,6 +18,7 @@
 #define dhtType DHT11		// Type of DHT <DHT11|DTH22>
 
 // desired settings
+int myState = 0;	// system 0=off, 1=on
 int myTemp = 0;		// degrees fahrenheit
 int myHumid = 0;	// percent humidity
 
@@ -33,19 +34,34 @@ DHT dhtDownstairs(dhtPinDownstairs, dhtType);
 
 // runs once
 void setup() {
+  // expose cloud variables
+  Spark.variable("mystate", &myState, INT);
   Spark.variable("mytemp", &myTemp, INT);
+  Spark.variable("myhumid", &myHumid, INT);
   Spark.variable("uptemp", &upTemp, INT);
+  Spark.variable("uphumid", &upHumid, INT);
   Spark.variable("dntemp", &dnTemp, INT);
-  //Spark.function("temps", getTemp);
-  //Spark.function("ctrlfan", ctrlFan);
+  Spark.variable("dnhumid", &dnHumid, INT);
+  // expose cloud functions
+  Spark.function("tempcall", tempCall);
+  Spark.function("syscall", sysCall);
+  //Spark.function("appcall", appCall);
+  // start sensor readings
   dhtUpstairs.begin();
   dhtDownstairs.begin();
+  // setup controls
+  ctrlFan("setup");
+  ctrlHeat("setup");
+  ctrlFilter("setup");
+  ctrlHumidifier("setup");
 }
 
 // runs forever
 void loop() {
 }
 
+// FUNCTIONS
+//// PRIMATIVES START
 // get current temperature for given location
 int getTemp(String location) {
   if (location == "upstairs") {
@@ -170,3 +186,56 @@ int ctrlHumidifier(String action) {
     return -1;
   }
 }
+//// PRIMATIVES END
+//// TEMP CALL START
+int tempCall(String temp) {
+  myTemp = temp.toInt();
+  return 0;
+}
+//// TEMP CALL END
+//// SYSTEM CALL START
+int sysCall(String action) {
+  if ( action == "off" || action == "on" || action == "status" ) {
+    int valFan = ctrlFan(action);
+    int valHeat = ctrlHeat(action);
+    int valFilter = ctrlFilter(action);
+    int valHumidifier = ctrlHumidifier(action);
+    if ( action == "status" ) {
+      int rc = (( valFan * 1000 ) + ( valHeat * 100 ) + ( valFilter * 10 ) + valHumidifier );
+      return rc;
+    }
+    if ( valFan != 0 || valHeat != 0 || valFilter != 0 || valHumidifier != 0 ) {
+      return -1;
+    }
+    else {
+      return 0;
+    }
+  }
+  if ( action == "diag" ) {
+    int sleep = 2000;
+    ctrlFan("on");
+    delay(sleep);
+    ctrlFan("off");
+    delay(sleep);
+    ctrlHeat("on");
+    delay(sleep);
+    ctrlHeat("off");
+    delay(sleep);
+    ctrlFilter("on");
+    delay(sleep);
+    ctrlFilter("off");
+    delay(sleep);
+    ctrlHumidifier("on");
+    delay(sleep);
+    ctrlHumidifier("off");
+    return 0;
+  }
+  else {
+    return -1;
+  }
+}
+//// SYSTEM CALL END
+//// APPLICATION CALL START
+int appCall(String action) {
+}
+//// APPLICAITON CALL END
