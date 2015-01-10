@@ -37,7 +37,6 @@ void setup() {
   // expose cloud variables
   Spark.variable("mystate", &myState, INT);
   Spark.variable("mytemp", &myTemp, INT);
-  Spark.variable("myhumid", &myHumid, INT);
   Spark.variable("uptemp", &upTemp, INT);
   Spark.variable("uphumid", &upHumid, INT);
   Spark.variable("dntemp", &dnTemp, INT);
@@ -61,10 +60,31 @@ void setup() {
 
 // runs forever
 void loop() {
+  // populate sensor variables
+  upTemp = sysCall("getTempUpstairs");
+  upHumid = sysCall("getHumidUpstairs");
+  dnTemp = sysCall("getTempDownstairs");
+  dnHumid = sysCall("getHumidDownstairs");
+  // check to make sure the state is enabled and temperature is non-zero
+  if ( myState == 1 && myTemp != 0 ) {
+    int actualTemp = (( upTemp + dnTemp ) / 2 ); // average up and down
+    int heatStatus = sysCall("getHeatStatus");
+    if ( actualTemp < ( myTemp - 2 )) {
+      if ( heatStatus == 0 ) {
+        sysCall("setHeatOn");
+      }
+    }
+    if ( actualTemp >= ( myTemp - 2 )) {
+      if ( heatStatus == 1 ) {
+        sysCall("setHeatOff");
+      }
+    }
+  }
+  delay(2000); // need wait 2 seconds in between sensor readings
 }
 
 // functions
-/// PRIMATIVES DO NOT CALL THESE USE sysCall(action)
+//// PRIMATIVES DO NOT CALL THESE USE sysCall(action)
 // control for furnace fan
 int ctrlFan(String action) {
   if (action == "on") {
@@ -203,11 +223,17 @@ int sysCall(String action) {
   if ( action == "setFanOff") {
     return ctrlFan("off");
   }
+  if ( action == "getFanStatus") {
+    return ctrlFan("status");
+  }
   if ( action == "setHeatOn") {
     return ctrlHeat("on");
   }
   if ( action == "setHeatOff") {
     return ctrlHeat("off");
+  }
+  if ( action == "getHeatStatus") {
+    return ctrlHeat("status");
   }
   if ( action == "setFilterOn") {
     return ctrlFilter("on");
@@ -215,11 +241,17 @@ int sysCall(String action) {
   if ( action == "setFilterOff") {
     return ctrlFilter("off");
   }
+  if ( action == "getFilterStatus") {
+    return ctrlFilter("status");
+  }
   if ( action == "setHumidifierOn") {
     return ctrlHumidifier("on");
   }
   if ( action == "setHumidifierOff") {
     return ctrlHumidifier("off");
+  }
+  if ( action == "getHumidifierStatus") {
+    return ctrlHumidifier("status");
   }
   else {
     return -1;
