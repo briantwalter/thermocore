@@ -43,60 +43,30 @@ void setup() {
   Spark.variable("dntemp", &dnTemp, INT);
   Spark.variable("dnhumid", &dnHumid, INT);
   // expose cloud functions
-  Spark.function("tempcall", tempCall);
+  Spark.function("settemp", setTemp);
   Spark.function("syscall", sysCall);
-  //Spark.function("appcall", appCall);
   // start sensor readings
   dhtUpstairs.begin();
   dhtDownstairs.begin();
   // setup controls
-  ctrlFan("setup");
-  ctrlHeat("setup");
-  ctrlFilter("setup");
-  ctrlHumidifier("setup");
+  pinMode(pinFan, OUTPUT);
+  digitalWrite(pinFan, LOW);
+  pinMode(pinHeat, OUTPUT);
+  digitalWrite(pinHeat, LOW);
+  pinMode(pinFilter, OUTPUT);
+  digitalWrite(pinFilter, LOW);
+  pinMode(pinHumidifier, OUTPUT);
+  digitalWrite(pinHumidifier, LOW);
 }
 
 // runs forever
 void loop() {
 }
 
-// FUNCTIONS
-//// PRIMATIVES START
-// get current temperature for given location
-int getTemp(String location) {
-  if (location == "upstairs") {
-    upTemp = dhtUpstairs.getTempFarenheit();
-    return upTemp;
-  }
-  if (location == "downstairs") {
-    dnTemp = dhtDownstairs.getTempFarenheit();
-    return dnTemp;
-  }
-  else {
-    return -1;
-  }
-}
-// get current humidity for given location
-int getHumid(String location) {
-  if (location == "upstairs") {
-    upHumid = dhtUpstairs.getHumidity();
-    return upHumid;
-  }
-  if (location == "downstairs") {
-    dnHumid = dhtDownstairs.getHumidity();
-    return dnHumid;
-  }
-  else {
-    return -1;
-  }
-}
+// functions
+/// PRIMATIVES DO NOT CALL THESE USE sysCall(action)
 // control for furnace fan
 int ctrlFan(String action) {
-  if (action == "setup") {
-    pinMode(pinFan, OUTPUT);
-    digitalWrite(pinFan, LOW);
-    return 0;
-  }
   if (action == "on") {
     digitalWrite(pinFan, HIGH);
     return 0;
@@ -106,9 +76,7 @@ int ctrlFan(String action) {
     return 0;
   }
   if (action == "status") {
-    int value = 0;
-    value = digitalRead(pinFan);
-    return value;
+    return digitalRead(pinFan);
   }
   else {
     return -1;
@@ -116,11 +84,6 @@ int ctrlFan(String action) {
 }
 // control for furnace heat
 int ctrlHeat(String action) {
-  if (action == "setup") {
-    pinMode(pinHeat, OUTPUT);
-    digitalWrite(pinHeat, LOW);
-    return 0;
-  }
   if (action == "on") {
     digitalWrite(pinHeat, HIGH);
     return 0;
@@ -130,9 +93,7 @@ int ctrlHeat(String action) {
     return 0;
   }
   if (action == "status") {
-    int value = 0;
-    value = digitalRead(pinHeat);
-    return value;
+    return digitalRead(pinHeat);
   }
   else {
     return -1;
@@ -140,11 +101,6 @@ int ctrlHeat(String action) {
 }
 // control for electornic air filter
 int ctrlFilter(String action) {
-  if (action == "setup") {
-    pinMode(pinFilter, OUTPUT);
-    digitalWrite(pinFilter, LOW);
-    return 0;
-  }
   if (action == "on") {
     digitalWrite(pinFilter, HIGH);
     return 0;
@@ -154,9 +110,7 @@ int ctrlFilter(String action) {
     return 0;
   }
   if (action == "status") {
-    int value = 0;
-    value = digitalRead(pinFilter);
-    return value;
+    return digitalRead(pinFilter);
   }
   else {
     return -1;
@@ -164,11 +118,6 @@ int ctrlFilter(String action) {
 }
 // control for external dehumidifier
 int ctrlHumidifier(String action) {
-  if (action == "setup") {
-    pinMode(pinHumidifier, OUTPUT);
-    digitalWrite(pinHumidifier, LOW);
-    return 0;
-  }
   if (action == "on") {
     digitalWrite(pinHumidifier, HIGH);
     return 0;
@@ -178,21 +127,19 @@ int ctrlHumidifier(String action) {
     return 0;
   }
   if (action == "status") {
-    int value = 0;
-    value = digitalRead(pinHumidifier);
-    return value;
+    return digitalRead(pinHumidifier);
   }
   else {
     return -1;
   }
 }
 //// PRIMATIVES END
-//// TEMP CALL START
-int tempCall(String temp) {
+//// SET TEMP CALL START
+int setTemp(String temp) {
   myTemp = temp.toInt();
   return 0;
 }
-//// TEMP CALL END
+//// SET TEMP CALL END
 //// SYSTEM CALL START
 int sysCall(String action) {
   if ( action == "off" || action == "on" || action == "status" ) {
@@ -230,12 +177,52 @@ int sysCall(String action) {
     ctrlHumidifier("off");
     return 0;
   }
+  if ( action == "getTempDownstairs") {
+    return dhtDownstairs.getTempFarenheit();
+  }
+  if ( action == "getTempUpstairs") {
+    return dhtUpstairs.getTempFarenheit();
+  }
+  if ( action == "getHumidDownstairs") {
+    return dhtDownstairs.getHumidity();
+  }
+  if ( action == "getHumidUpstairs") {
+    return dhtUpstairs.getHumidity();
+  }
+  if ( action == "setStateOn") {
+    myState = 1;
+    return 0;
+  }
+  if ( action == "setStateOff") {
+    myState = 0;
+    return 0;
+  }
+  if ( action == "setFanOn") {
+    return ctrlFan("on");
+  }
+  if ( action == "setFanOff") {
+    return ctrlFan("off");
+  }
+  if ( action == "setHeatOn") {
+    return ctrlHeat("on");
+  }
+  if ( action == "setHeatOff") {
+    return ctrlHeat("off");
+  }
+  if ( action == "setFilterOn") {
+    return ctrlFilter("on");
+  }
+  if ( action == "setFilterOff") {
+    return ctrlFilter("off");
+  }
+  if ( action == "setHumidifierOn") {
+    return ctrlHumidifier("on");
+  }
+  if ( action == "setHumidifierOff") {
+    return ctrlHumidifier("off");
+  }
   else {
     return -1;
   }
 }
 //// SYSTEM CALL END
-//// APPLICATION CALL START
-int appCall(String action) {
-}
-//// APPLICAITON CALL END
