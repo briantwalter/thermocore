@@ -1,6 +1,6 @@
 //
 // thermocore-alpha     Thermocore heating control ALPHA
-// version              0.0.2
+// version              0.0.3
 // author               Brian Walter @briantwalter
 // description          Spark.io core control of my furnace, 
 //                      dehumidifier, and electronic air filter 
@@ -49,13 +49,13 @@ void setup() {
   dhtDownstairs.begin();
   // setup controls and set all relays off
   pinMode(pinFan, OUTPUT);
-  digitalWrite(pinFan, HIGH);
+  digitalWrite(pinFan, LOW);
   pinMode(pinHeat, OUTPUT);
-  digitalWrite(pinHeat, HIGH);
+  digitalWrite(pinHeat, LOW);
   pinMode(pinFilter, OUTPUT);
-  digitalWrite(pinFilter, HIGH);
+  digitalWrite(pinFilter, LOW);
   pinMode(pinHumidifier, OUTPUT);
-  digitalWrite(pinHumidifier, HIGH);
+  digitalWrite(pinHumidifier, LOW);
 }
 
 // runs forever
@@ -70,12 +70,12 @@ void loop() {
     int actualTemp = (( upTemp + dnTemp ) / 2 ); // average up and down
     int heatStatus = sysCall("getHeatStatus");
     if ( actualTemp < ( myTemp - 2 )) {
-      if ( heatStatus == 1 ) {
+      if ( heatStatus == 0 ) {
         sysCall("setHeatOn");
       }
     }
     if ( actualTemp >= ( myTemp - 2 )) {
-      if ( heatStatus == 0 ) {
+      if ( heatStatus == 1 ) {
         sysCall("setHeatOff");
       }
     }
@@ -88,11 +88,11 @@ void loop() {
 // control for furnace fan
 int ctrlFan(String action) {
   if (action == "on") {
-    digitalWrite(pinFan, LOW);
+    digitalWrite(pinFan, HIGH);
     return 0;
   }
   if (action == "off") {
-    digitalWrite(pinFan, HIGH);
+    digitalWrite(pinFan, LOW);
     return 0;
   }
   if (action == "status") {
@@ -105,11 +105,11 @@ int ctrlFan(String action) {
 // control for furnace heat
 int ctrlHeat(String action) {
   if (action == "on") {
-    digitalWrite(pinHeat, LOW);
+    digitalWrite(pinHeat, HIGH);
     return 0;
   }
   if (action == "off") {
-    digitalWrite(pinHeat, HIGH);
+    digitalWrite(pinHeat, LOW);
     return 0;
   }
   if (action == "status") {
@@ -122,11 +122,11 @@ int ctrlHeat(String action) {
 // control for electornic air filter
 int ctrlFilter(String action) {
   if (action == "on") {
-    digitalWrite(pinFilter, LOW);
+    digitalWrite(pinFilter, HIGH);
     return 0;
   }
   if (action == "off") {
-    digitalWrite(pinFilter, HIGH);
+    digitalWrite(pinFilter, LOW);
     return 0;
   }
   if (action == "status") {
@@ -139,11 +139,11 @@ int ctrlFilter(String action) {
 // control for external dehumidifier
 int ctrlHumidifier(String action) {
   if (action == "on") {
-    digitalWrite(pinHumidifier, LOW);
+    digitalWrite(pinHumidifier, HIGH);
     return 0;
   }
   if (action == "off") {
-    digitalWrite(pinHumidifier, HIGH);
+    digitalWrite(pinHumidifier, LOW);
     return 0;
   }
   if (action == "status") {
